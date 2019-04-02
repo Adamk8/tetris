@@ -133,6 +133,3 @@ int main(){
 
     return 0;
 }
-
-//g++ -c tetris.cpp
-//g++ tetris.o -o tetris -l-graphics -l-window -l-system
