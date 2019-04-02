@@ -1,7 +1,6 @@
 #include <SFML/Graphics.hpp>
 #include <time.h>
-
-
+using namespace sf;
 
 const int HIEGHT = 20;
 const int WIDTH = 10;
@@ -10,7 +9,7 @@ int gameboard[HIEGHT][WIDTH] = {0};
 
 struct piece{
     int x,y;
-} a[4], b[4];
+} position[4], b[4];
 
 int shapes[7][4]{
     //Shapes Laid out in 2x4 matrix
@@ -23,34 +22,109 @@ int shapes[7][4]{
     2,3,4,5, //Square
 };
 
-int main(){
-    sf::RenderWindow game(sf::VideoMode(900, 1600), "Tetris Window");
+bool check(){
+    for (int i = 0; i< 4; i++){
+        if (position[i].x < 0 || position[i].x >= WIDTH || position[i].y >= HIEGHT ) return 0;
+        else if (gameboard[position[i].y][position[i].x]) return 0;
+    }
+    return 1;
+}
 
-    sf::Texture squares;
+int main(){
+
+    srand(time(0));
+
+    RenderWindow game(VideoMode(320, 480), "Tetris Window");
+
+    Texture squares;
     squares.loadFromFile("tiles.png");
 
-    sf::Sprite block(squares);
-    block.setTextureRect(sf::IntRect(0,0,18,18));
+    Sprite block(squares);
+    block.setTextureRect(IntRect(0,0,18,18));
 
+    int movement =  0, colour = 1;
+    bool rotate = 0;
+    float timer = 0, delay = 0;
+
+    Clock clock;
 
     while(game.isOpen()){
-        sf::Event e;
+        Event e;
+        float time = clock.getElapsedTime().asSeconds();
+        clock.restart();
+        timer += time;
         while (game.pollEvent(e)){
-            if (e.type == sf::Event::Closed){
-                game.close();
+
+            if (e.type == Event::Closed){
+                game.close();  
             }
-        int n = 3;
-        for (int i = 0; i<4; i++) {
-            a[i].x = shapes[n][i] % 2;
-            a[i].y = shapes[n][i] / 2;
+            //Keyboard Input Actions 
+            if (e.type == Event::KeyPressed){
+                if (e.key.code == Keyboard::Up) rotate = true;
+                else if (e.key.code == Keyboard::Left) movement = -1;
+                else if (e.key.code == Keyboard::Right) movement = 1;
+            }
+            if (Keyboard::isKeyPressed(Keyboard::Down))delay = 0.05;
+
+            //Actions converted into commands
+            //lateral movement 
+            for (int i = 0 ; i < 4; i++){
+                b[i] = position[i];
+                position[i].x += movement;
+            }   
+            if (!check())for (int i = 0; i <4; i++)position[i] = b[i];
+
+            //rotate
+            if (rotate){
+
+                piece center = position[1];
+                for (int i =0; i < 4; i++){
+                    int x = position[i].y - center.y;
+                    int y = position[i].x - center.x;
+                    position[i].x = center.x - x;
+                    position[i].y = center.y + y;
+                }
+                if (!check())for (int i = 0; i <4; i++)position[i] = b[i];
+            }
+            //Fallling
+            if (timer > delay){
+                for (int i=0; i < 4; i++){
+                    b[i] = position[i];       
+                    position[i].y += 1;
+                }
+                if (!check()){
+                    for (int i = 0; i <4; i++)gameboard[b[i].y][b[i].x] = colour;
+                    colour = 1 + rand()%7;
+                    int n = rand()%7;
+                    for (int i = 0; i <4; i++){
+                        position[i].x = shapes[n][i] % 2;
+                        position[i].y = shapes[n][i] / 2;
+                    }
+                }
+                timer = 0;
+            }
+
+        //Reset controls
+        movement = 0;
+        rotate = 0;
+        delay = 0.3;
+
         }
 
-
+        //Draw Graphics
+        game.clear(Color::Black);
+        for (int i = 0; i <HIEGHT; i++){
+            for (int j = 0; j < WIDTH; j++){
+                if (gameboard[i][j] == 0 )continue;
+                block.setTextureRect(IntRect(gameboard[i][j]*18,0,18,18));
+                block.setPosition(j*18,i*18);
+                game.draw(block);
+            }
         }
-        //Set Background
-        game.clear(sf::Color::Black);
-        for (int i = 0 ; i <4; i++){
-            block.setPosition(a[i].x*18,a[i].y*18);
+
+        for (int i =0; i < 4; i++){
+            block.setTextureRect(IntRect(colour+18,0,18,18));
+            block.setPosition(position[i].x*18, position[i].y*18);
             game.draw(block);
         }
         game.display();
@@ -61,4 +135,4 @@ int main(){
 }
 
 //g++ -c tetris.cpp
-//g++ tetris.o -o tetris -lsfml-graphics -lsfml-window -lsfml-system
+//g++ tetris.o -o tetris -l-graphics -l-window -l-system
