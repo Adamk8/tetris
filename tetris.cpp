@@ -13,7 +13,7 @@ struct piece{
 
 int shapes[7][4]{
     //Shapes Laid out in 2x4 matrix
-    1,3,5,7, //Straight block
+    1,3,5,7, //I piece
     2,4,5,7, //Right zig
     3,5,4,6, //Left zig
     3,5,4,7, //T-block
@@ -31,14 +31,15 @@ bool check(){
 }
 
 int main(){
-
+    //set random seed
     srand(time(0));
-
+    
+    //create game window
     RenderWindow game(VideoMode(320, 480), "Tetris Window");
-
+    
+    //Load textures
     Texture squares;
     squares.loadFromFile("tiles.png");
-
     Sprite block(squares);
     block.setTextureRect(IntRect(0,0,18,18));
 
@@ -74,7 +75,7 @@ int main(){
             }   
             if (!check())for (int i = 0; i <4; i++)position[i] = b[i];
 
-            //rotate
+            //rotate pieces
             if (rotate){
 
                 piece center = position[1];
@@ -86,7 +87,7 @@ int main(){
                 }
                 if (!check())for (int i = 0; i <4; i++)position[i] = b[i];
             }
-            //Fallling
+            //Fallling mechanic
             if (timer > delay){
                 for (int i=0; i < 4; i++){
                     b[i] = position[i];       
@@ -121,7 +122,8 @@ int main(){
                 game.draw(block);
             }
         }
-
+        
+        //Create Blocks
         for (int i =0; i < 4; i++){
             block.setTextureRect(IntRect(colour+18,0,18,18));
             block.setPosition(position[i].x*18, position[i].y*18);
